@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>枪战游戏</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #shooting-game-board {
+            border: 2px solid #333;
+            background-color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="shooting-game-board" width="400" height="400"></canvas>
+    <script>
+        const shootingCanvas = document.getElementById('shooting-game-board');
+        const shootingCtx = shootingCanvas.getContext('2d');
+
+        const player = {
+            x: 200,
+            y: 350,
+            width: 20,
+            height: 20,
+            speed: 5
+        };
+
+        const bullets = [];
+        const enemies = [];
+
+        function drawPlayer() {
+            shootingCtx.fillStyle = 'blue';
+            shootingCtx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function drawBullets() {
+            shootingCtx.fillStyle = 'red';
+            bullets.forEach(bullet => {
+                shootingCtx.fillRect(bullet.x, bullet.y, 5, 10);
+                bullet.y -= 10;
+            });
+            // 移除超出画布的子弹
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                if (bullets[i].y < 0) {
+                    bullets.splice(i, 1);
+                }
+            }
+        }
+
+        function drawEnemies() {
+            shootingCtx.fillStyle = 'green';
+            enemies.forEach(enemy => {
+                shootingCtx.fillRect(enemy.x, enemy.y, 20, 20);
+                enemy.y += 3;
+            });
+            // 移除超出画布的敌人
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                if (enemies[i].y > shootingCanvas.height) {
+                    enemies.splice(i, 1);
+                }
+            }
+        }
+
+        function checkCollisions() {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    if (
+                        bullets[i].x < enemies[j].x + 20 &&
+                        bullets[i].x + 5 > enemies[j].x &&
+                        bullets[i].y < enemies[j].y + 20 &&
+                        bullets[i].y + 10 > enemies[j].y
+                    ) {
+                        bullets.splice(i, 1);
+                        enemies.splice(j, 1);
+                        break;
+                    }
+                }
+            }
+        }
+
+        function spawnEnemy() {
+            if (Math.random() < 0.02) {
+                enemies.push({
+                    x: Math.random() * (shootingCanvas.width - 20),
+                    y: 0
+                });
+            }
+        }
+
+        function gameLoopShooting() {
+            shootingCtx.clearRect(0, 0, shootingCanvas.width, shootingCanvas.height);
+            drawPlayer();
+            drawBullets();
+            drawEnemies();
+            checkCollisions();
+            spawnEnemy();
+            requestAnimationFrame(gameLoopShooting);
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowLeft' && player.x > 0) {
+                player.x -= player.speed;
+            } else if (event.key === 'ArrowRight' && player.x < shootingCanvas.width - player.width) {
+                player.x += player.speed;
+            } else if (event.key === ' ') {
+                bullets.push({
+                    x: player.x + player.width / 2 - 2.5,
+                    y: player.y
+                });
+            }
+        });
+
+        gameLoopShooting();
+    </script>
+</body>
+
+</html>
+    
